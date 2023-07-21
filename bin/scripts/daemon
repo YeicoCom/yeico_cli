@@ -5,13 +5,21 @@ APP_RUN=/apps/$APP_NAME/bin/$APP_NAME
 APP_TMP=/apps/$APP_NAME/tmp
 APP_ERTS=/usr/lib/erlang/erts-14.0.2
 
+panic() { 
+    >&2 echo $1
+    exit 1
+}
+
 ln -sf $APP_ERTS /apps/$APP_NAME/
 mkdir -p $APP_TMP
 mount tmpfs -t tmpfs $APP_TMP
 mount -o remount,ro /apps
 $APP_RUN daemon
 
+COUNTER=5
 while true; do
-sleep 1
-($APP_RUN pid) && break
+    ($APP_RUN pid 2> /dev/null) && break
+    COUNTER=$[$COUNTER-1]
+    [ $COUNTER == "0" ] && panic "PID timeout"
+    sleep 1
 done

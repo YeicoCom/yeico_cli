@@ -12,17 +12,30 @@ APP_NAME=$(basename $APP_PATH)
 APP_RUN=/apps/$APP_NAME/bin/$APP_NAME
 APP_TMP=/apps/$APP_NAME/tmp
 
+panic() { 
+    >&2 echo $1
+    exit 1
+}
+
 install_app () {
-    MIX_ENV=prod mix deps.get
-    MIX_ENV=prod mix release --overwrite --quiet
+    [ -f mix.exs ] || panic "Missing mix.exs"
+    [ -d deps ] || MIX_ENV=prod mix deps.get  || panic "Deps get failure"
+    MIX_ENV=prod mix release --overwrite --quiet  || panic "Release failure"
+    # sudo setcap cap_net_raw+p /bin/ping (proxmox setup)
+    ping -c 1 $APP_HOST 2>&1 > /dev/null || panic "Ping failure"
     cat $SCRIPT_PATH/scripts/stop \
         | sed -e "s/\$1/$APP_NAME/g" \
-        | ssh root@$APP_HOST
-    cd _build/prod/rel/
-    rsync -ar --delete --exclude erts-* $APP_NAME root@$APP_HOST:/apps/
+        | ssh -T root@$APP_HOST \
+        2> /dev/null \
+        || panic "Stop failure"
+    cd _build/prod/rel/ || panic "Missing release folder"
+    rsync -ar --delete --exclude erts-* $APP_NAME root@$APP_HOST:/apps/ \
+        || panic "Sync failure"
     cat $SCRIPT_PATH/scripts/daemon \
         | sed -e "s/\$1/$APP_NAME/g" \
-        | ssh root@$APP_HOST
+        | ssh -T root@$APP_HOST \
+        2> /dev/null \
+        || panic "Start failure"
 }
 
 case $ACTION in
