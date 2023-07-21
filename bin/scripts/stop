@@ -1,0 +1,20 @@
+#!/bin/bash
+
+APP_NAME=$1
+APP_RUN=/apps/$APP_NAME/bin/$APP_NAME
+APP_TMP=/apps/$APP_NAME/tmp
+
+mount -o remount,rw /apps
+while true; do
+(mount | grep -v tmpfs | grep /apps | grep rw) && break
+sleep 1
+done
+
+# kills the script if not detached with &
+$APP_RUN stop &
+
+while true; do
+sleep 1
+(umount $APP_TMP)
+(rm -fr $APP_TMP) && break
+done

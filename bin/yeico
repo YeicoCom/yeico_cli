@@ -1,3 +1,35 @@
-#!/bin/bash -xe
+#!/bin/bash
 
-echo "Hello World!"
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+SCRIPT_PATH=$(realpath $SCRIPT_PATH)
+
+ACTION=$1
+APP_HOST=$2
+APP_PATH=${3:-$(pwd)}
+cd $APP_PATH
+APP_PATH=$(pwd)
+APP_NAME=$(basename $APP_PATH)
+APP_RUN=/apps/$APP_NAME/bin/$APP_NAME
+APP_TMP=/apps/$APP_NAME/tmp
+
+install_app () {
+    MIX_ENV=prod mix deps.get
+    MIX_ENV=prod mix release --overwrite --quiet
+    cat $SCRIPT_PATH/scripts/stop \
+        | sed -e "s/\$1/$APP_NAME/g" \
+        | ssh root@$APP_HOST
+    cd _build/prod/rel/
+    rsync -ar --delete --exclude erts-* $APP_NAME root@$APP_HOST:/apps/
+    cat $SCRIPT_PATH/scripts/daemon \
+        | sed -e "s/\$1/$APP_NAME/g" \
+        | ssh root@$APP_HOST
+}
+
+case $ACTION in
+    install)
+    install_app
+    ;;
+    *)
+    echo "Unknown action: $ACTION"
+    ;;
+esac
