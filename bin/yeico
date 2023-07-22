@@ -9,40 +9,66 @@ APP_PATH=${3:-$(pwd)}
 cd $APP_PATH
 APP_PATH=$(pwd)
 APP_NAME=$(basename $APP_PATH)
-APP_RUN=/apps/$APP_NAME/bin/$APP_NAME
-APP_TMP=/apps/$APP_NAME/tmp
+RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
 
 panic() { 
     >&2 echo $1
     exit 1
 }
 
-install_app () {
+build_app () {
     [ -f mix.exs ] || panic "Missing mix.exs"
     [ -d deps ] || MIX_ENV=prod mix deps.get  || panic "Deps get failure"
     MIX_ENV=prod mix release --overwrite --quiet  || panic "Release failure"
-    # sudo setcap cap_net_raw+p /bin/ping (proxmox setup)
-    ping -c 1 $APP_HOST 2>&1 > /dev/null || panic "Ping failure"
-    cat $SCRIPT_PATH/scripts/stop \
-        | sed -e "s/\$1/$APP_NAME/g" \
-        | ssh -T root@$APP_HOST \
-        2> /dev/null \
-        || panic "Stop failure"
-    cd _build/prod/rel/ || panic "Missing release folder"
-    rsync -ar --delete --exclude erts-* $APP_NAME root@$APP_HOST:/apps/ \
-        || panic "Sync failure"
-    cat $SCRIPT_PATH/scripts/daemon \
-        | sed -e "s/\$1/$APP_NAME/g" \
-        | ssh -T root@$APP_HOST \
-        2> /dev/null \
-        || panic "Start failure"
+}
+
+rsync_clean() {
+    rm $RSYNC_CONF 2>/dev/null
+    sudo killall rsync 2>/dev/null
+}
+
+rsync_app() {
+    build_app
+    rsync_clean
+    trap "rsync_clean" EXIT
+    RSYNC_PATH=$(realpath _build/prod/rel/$APP_NAME)
+    echo "[$APP_NAME]" > $RSYNC_CONF
+    echo "path=$RSYNC_PATH" >> $RSYNC_CONF
+    sudo rsync --daemon --config=$RSYNC_CONF
+    echo apps.sh $1 $APP_NAME | ssh -T root@$APP_HOST -R 873:127.0.0.1:873
+}
+
+command_app() {
+    echo apps.sh $1 $APP_NAME | ssh -T root@$APP_HOST
 }
 
 case $ACTION in
+    start)
+    command_app start
+    ;;
+    stop)
+    command_app stop
+    ;;
+    restart)
+    command_app restart
+    ;;
     install)
-    install_app
+    rsync_app install
+    ;;
+    uninstall)
+    command_app uninstall
+    ;;
+    upgrade)
+    rsync_app upgrade
+    ;;
+    list)
+    command_app list
+    ;;
+    pid)
+    command_app pid
     ;;
     *)
-    echo "Unknown action: $ACTION"
+    echo "Usage: $0 {start|stop|restart|install|uninstall|upgrade|list|pid}"
+    exit 1
     ;;
 esac
