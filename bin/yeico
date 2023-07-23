@@ -47,8 +47,8 @@ command_app() {
     echo apps.sh $1 $APP_NAME | ssh -T root@$APP_HOST
 }
 
-cog_weston() {
-    echo cog.sh $1 | ssh -T weston@$APP_HOST
+command_cog() {
+    echo cog.sh $1 | ssh -T root@$APP_HOST
 }
 
 case $ACTION in
@@ -80,7 +80,7 @@ case $ACTION in
     command_app pid
     ;;
     cog)
-    cog_weston $COG_URL
+    command_cog $COG_URL
     ;;
     *)
     echo "Usage: $0 {build|start|stop|restart|install|uninstall|upgrade|list|pid|cog}"
