@@ -1,12 +1,5 @@
 import Config
 
-# Configure your database
-config :hello_phoenix, HelloPhoenix.Repo,
-  database: Path.expand("../hello_phoenix_dev.db", Path.dirname(__ENV__.file)),
-  pool_size: 5,
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -20,7 +13,7 @@ config :hello_phoenix, HelloPhoenixWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "1j5F5WlGtBe7Ysu34DRp7rUYfNeypcxB8oAWvuCPFIpgUr0yhIWLBJVxZGOljiaV",
+  secret_key_base: "9Twij16SloySZQLOeDyd49mnoQ0bZty6glh75Q7GRZFahrHw38INBOfNF/wKbhvY",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}

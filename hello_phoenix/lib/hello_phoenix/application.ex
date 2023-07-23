@@ -10,8 +10,6 @@ defmodule HelloPhoenix.Application do
     children = [
       # Start the Telemetry supervisor
       HelloPhoenixWeb.Telemetry,
-      # Start the Ecto repository
-      HelloPhoenix.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: HelloPhoenix.PubSub},
       # Start Finch

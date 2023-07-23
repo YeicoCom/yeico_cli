@@ -7,7 +7,7 @@ defmodule HelloPhoenixWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_hello_phoenix_key",
-    signing_salt: "VLYlUyjl",
+    signing_salt: "3etBgCBj",
     same_site: "Lax"
   ]
 
@@ -29,7 +29,6 @@ defmodule HelloPhoenixWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :hello_phoenix
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

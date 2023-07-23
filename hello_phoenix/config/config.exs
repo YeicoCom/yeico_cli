@@ -7,9 +7,6 @@
 # General application configuration
 import Config
 
-config :hello_phoenix,
-  ecto_repos: [HelloPhoenix.Repo]
-
 # Configures the endpoint
 config :hello_phoenix, HelloPhoenixWeb.Endpoint,
   url: [host: "localhost"],
@@ -18,7 +15,7 @@ config :hello_phoenix, HelloPhoenixWeb.Endpoint,
     layout: false
   ],
   pubsub_server: HelloPhoenix.PubSub,
-  live_view: [signing_salt: "rAJcoWXX"]
+  live_view: [signing_salt: "lWvMz9ZG"]
 
 # Configures the mailer
 #

@@ -27,7 +27,7 @@ bin/yeico upgrade kiosk hello_elixir
 
 mix local.hex --force
 mix archive.install hex phx_new --force
-mix phx.new hello_phoenix --database sqlite3
+mix phx.new hello_phoenix --no-ecto
 bin/yeico build kiosk hello_phoenix
 bin/yeico upgrade kiosk hello_phoenix
 bin/yeico cog kiosk http://localhost:4000/
