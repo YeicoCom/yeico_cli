@@ -6,10 +6,11 @@ SCRIPT_PATH=$(realpath $SCRIPT_PATH)
 ACTION=$1
 APP_HOST=$2
 APP_PATH=${3:-$(pwd)}
-cd $APP_PATH
+[ $ACTION == cog ] || cd $APP_PATH
 APP_PATH=$(pwd)
 APP_NAME=$(basename $APP_PATH)
 RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
+COG_URL=$3
 
 panic() { 
     >&2 echo $1
@@ -18,8 +19,12 @@ panic() {
 
 build_app () {
     [ -f mix.exs ] || panic "Missing mix.exs"
-    [ -d deps ] || MIX_ENV=prod mix deps.get  || panic "Deps get failure"
-    MIX_ENV=prod mix release --overwrite --quiet  || panic "Release failure"
+    [ -d deps ] || (MIX_ENV=prod mix deps.get  || panic "Deps get failure")
+    [ -d assets ] && (MIX_ENV=prod mix phx.gen.release || panic "Phx release failure")
+    [ -d assets ] && (MIX_ENV=prod mix assets.deploy || panic "Assets deploy failure")
+    MIX_ENV=prod mix release --overwrite --quiet || panic "Release failure"
+    [ -d assets ] && echo PHX_SERVER=true $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
+    [ ! -d assets ] && echo $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
 }
 
 rsync_clean() {
@@ -28,9 +33,9 @@ rsync_clean() {
 }
 
 rsync_app() {
-    build_app
     rsync_clean
     trap "rsync_clean" EXIT
+    [ -d _build/prod/rel/$APP_NAME ] || panic "Release folder not found"
     RSYNC_PATH=$(realpath _build/prod/rel/$APP_NAME)
     echo "[$APP_NAME]" > $RSYNC_CONF
     echo "path=$RSYNC_PATH" >> $RSYNC_CONF
@@ -42,7 +47,14 @@ command_app() {
     echo apps.sh $1 $APP_NAME | ssh -T root@$APP_HOST
 }
 
+cog_weston() {
+    echo cog.sh $1 | ssh -T weston@$APP_HOST
+}
+
 case $ACTION in
+    build)
+    build_app
+    ;;
     start)
     command_app start
     ;;
@@ -67,8 +79,11 @@ case $ACTION in
     pid)
     command_app pid
     ;;
+    cog)
+    cog_weston $COG_URL
+    ;;
     *)
-    echo "Usage: $0 {start|stop|restart|install|uninstall|upgrade|list|pid}"
+    echo "Usage: $0 {build|start|stop|restart|install|uninstall|upgrade|list|pid|cog}"
     exit 1
     ;;
 esac
