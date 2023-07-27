@@ -57,6 +57,7 @@ if [ $APP_REQUIRED == 1 ]; then
     APP_PHOENIX=$(test "$APP_PHOENIX" == "nil" && echo false || echo true)
     echo App Phoenix: $APP_PHOENIX
     RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
+    APP_RELDIR=_build/prod/rel/$APP_NAME
 fi
 
 build_app () {
@@ -65,12 +66,21 @@ build_app () {
         [ -d assets ] && (MIX_ENV=prod mix assets.deploy || panic "Assets deploy failure")
     fi    
     MIX_ENV=prod mix release --overwrite --quiet || panic "Release failure"
-    echo YEICO_CLI_APP_NAME=$APP_NAME > _build/prod/rel/$APP_NAME/release.yeico
-    echo YEICO_CLI_APP_VERSION=$APP_VERSION >> _build/prod/rel/$APP_NAME/release.yeico
-    echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> _build/prod/rel/$APP_NAME/release.yeico
-    [ $APP_PHOENIX == true ] && touch _build/prod/rel/$APP_NAME/phoenix
-    [ $APP_PHOENIX == true ] && echo PHX_SERVER=true $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
-    [ $APP_PHOENIX == false ] && echo $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
+    echo YEICO_CLI_APP_NAME=$APP_NAME > $APP_RELDIR/release.yeico
+    echo YEICO_CLI_APP_VERSION=$APP_VERSION >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> $APP_RELDIR/release.yeico
+    ln -s releases/$APP_VERSION/env.sh $APP_RELDIR/env.sh
+    echo export RELEASE_NODE=$APP_NAME@localhost >> $APP_RELDIR/env.sh
+    echo export HOME=/data/$APP_NAME >> $APP_RELDIR/env.sh
+    if [[ $APP_PHOENIX == true ]]; then
+        touch $APP_RELDIR/phoenix
+        APP_SECRET=$(mix phx.gen.secret | last_line)
+        echo export PHX_SERVER=true >> $APP_RELDIR/env.sh
+        echo export SECRET_KEY_BASE=$APP_SECRET >> $APP_RELDIR/env.sh
+        echo $APP_PATH/$APP_RELDIR/bin/$APP_NAME start
+    else
+        echo $APP_PATH/$APP_RELDIR/bin/$APP_NAME start
+    fi
 }
 
 rsync_clean() {
@@ -82,9 +92,9 @@ rsync_clean() {
 rsync_app() {
     rsync_clean
     trap "rsync_clean" EXIT
-    [ -d _build/prod/rel/$APP_NAME ] || panic "Release folder not found"
-    [ -f _build/prod/rel/$APP_NAME/release.yeico ] || panic "Release file not found: build required."
-    RSYNC_PATH=$(realpath _build/prod/rel/$APP_NAME)
+    [ -d $APP_RELDIR ] || panic "Release folder not found"
+    [ -f $APP_RELDIR/release.yeico ] || panic "Release file not found: build required."
+    RSYNC_PATH=$(realpath $APP_RELDIR)
     echo "[$APP_NAME]" > $RSYNC_CONF
     echo "path=$RSYNC_PATH" >> $RSYNC_CONF
     sudo rsync --daemon --config=$RSYNC_CONF
