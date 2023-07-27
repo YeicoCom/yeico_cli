@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 SCRIPT_PATH=$(realpath $SCRIPT_PATH)
@@ -6,36 +6,82 @@ SCRIPT_PATH=$(realpath $SCRIPT_PATH)
 ACTION=$1
 APP_HOST=$2
 APP_PATH=${3:-$(pwd)}
-[ $ACTION == cog ] || cd $APP_PATH
-APP_PATH=$(pwd)
-APP_NAME=$(basename $APP_PATH)
-RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
 COG_URL=$3
+
+case $ACTION in
+    build)
+    APP_REQUIRED=1
+    echo Action: $ACTION
+    echo App Folder: $APP_PATH
+    ;;
+    list|cog)
+    APP_REQUIRED=0
+    echo Action: $ACTION
+    echo Target: $APP_HOST
+    ;;
+    *)
+    APP_REQUIRED=1
+    echo Action: $ACTION
+    echo Target: $APP_HOST
+    echo App Folder: $APP_PATH
+    ;;
+esac
 
 panic() { 
     >&2 echo $1
     exit 1
 }
 
-build_app () {
+last_line() {
+    # [error] `inotify-tools` is needed to run `file_system` for your system, check https://github.com/rvoicilas/inotify-tools/wiki 
+    # for more information about how to install it. If it's already installed but not be found, appoint executable file with `config.exs` 
+    # or `FILESYSTEM_FSINOTIFY_EXECUTABLE_FILE` env.
+    # [warning] Could not start Phoenix live-reload because we cannot listen to the file system.
+    # You don't need to worry! This is an optional feature used during development to
+    # refresh your browser when you save files and it does not affect production.
+    sed -n '$p' -
+}
+
+if [ $APP_REQUIRED == 1 ]; then
+    cd $APP_PATH
+    APP_PATH=$(pwd)
+    echo App Path: $APP_PATH
     [ -f mix.exs ] || panic "Missing mix.exs"
     [ -d deps ] || (MIX_ENV=prod mix deps.get  || panic "Deps get failure")
-    [ -d assets ] && (MIX_ENV=prod mix phx.gen.release || panic "Phx release failure")
-    [ -d assets ] && (MIX_ENV=prod mix assets.deploy || panic "Assets deploy failure")
+    (MIX_ENV=prod mix compile  || panic "Compilation failure")
+    APP_NAME=$(mix run --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
+    echo App Name: $APP_NAME
+    APP_VERSION=$(mix run --eval "Mix.Project.config()[:version] |> IO.puts()" | last_line)
+    echo App Version: $APP_VERSION
+    APP_PHOENIX=$(mix run --eval "Mix.Project.config()[:deps] |> Keyword.get(:phoenix) |> IO.inspect()" | last_line)
+    APP_PHOENIX=$(test "$APP_PHOENIX" == "nil" && echo false || echo true)
+    echo App Phoenix: $APP_PHOENIX
+    RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
+fi
+
+build_app () {
+    if [[ $APP_PHOENIX == true ]]; then
+        (MIX_ENV=prod mix phx.gen.release || panic "Phx release failure")
+        [ -d assets ] && (MIX_ENV=prod mix assets.deploy || panic "Assets deploy failure")
+    fi    
     MIX_ENV=prod mix release --overwrite --quiet || panic "Release failure"
-    [ -d assets ] && echo PHX_SERVER=true $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
-    [ ! -d assets ] && echo $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
+    echo YEICO_CLI_APP_NAME=$APP_NAME > _build/prod/rel/$APP_NAME/release.yeico
+    echo YEICO_CLI_APP_VERSION=$APP_VERSION >> _build/prod/rel/$APP_NAME/release.yeico
+    echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> _build/prod/rel/$APP_NAME/release.yeico
+    [ $APP_PHOENIX == true ] && echo PHX_SERVER=true $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
+    [ $APP_PHOENIX == false ] && echo $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
 }
 
 rsync_clean() {
-    rm $RSYNC_CONF 2>/dev/null
-    sudo killall rsync 2>/dev/null
+    : rm $RSYNC_CONF 2>/dev/null
+    : sudo killall -9 rsync 2>/dev/null
 }
 
 rsync_app() {
     rsync_clean
     trap "rsync_clean" EXIT
     [ -d _build/prod/rel/$APP_NAME ] || panic "Release folder not found"
+    [ -f _build/prod/rel/$APP_NAME/release.yeico ] || panic "Release file not found: build required."
     RSYNC_PATH=$(realpath _build/prod/rel/$APP_NAME)
     echo "[$APP_NAME]" > $RSYNC_CONF
     echo "path=$RSYNC_PATH" >> $RSYNC_CONF

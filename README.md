@@ -1,6 +1,11 @@
-# yeico_cli
+# Yeico CLI
 
-Yeico CLI
+## Fixme
+
+- Test app with multiple release versions
+- Test app with different app name vs folder name
+
+## Usage
 
 ```bash
 asdf plugin add yeico_cli https://github.com/YeicoDev/yeico_asdf.git
@@ -37,5 +42,6 @@ bin/yeico cog kiosk https://github.com
 mix phx.new --no-dashboard --no-assets --no-ecto --no-gettext --no-html --no-live --no-mailer hello_webapi
 bin/yeico build kiosk hello_webapi
 bin/yeico upgrade kiosk hello_webapi
+bin/yeico cog kiosk http://localhost:4001/api/
 ```
 

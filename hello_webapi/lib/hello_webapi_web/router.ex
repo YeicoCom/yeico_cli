@@ -7,5 +7,7 @@ defmodule HelloWebapiWeb.Router do
 
   scope "/api", HelloWebapiWeb do
     pipe_through :api
+
+    get "/", ApiController, :index
   end
 end
