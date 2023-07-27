@@ -68,13 +68,15 @@ build_app () {
     echo YEICO_CLI_APP_NAME=$APP_NAME > _build/prod/rel/$APP_NAME/release.yeico
     echo YEICO_CLI_APP_VERSION=$APP_VERSION >> _build/prod/rel/$APP_NAME/release.yeico
     echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> _build/prod/rel/$APP_NAME/release.yeico
+    [ $APP_PHOENIX == true ] && touch _build/prod/rel/$APP_NAME/phoenix
     [ $APP_PHOENIX == true ] && echo PHX_SERVER=true $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
     [ $APP_PHOENIX == false ] && echo $APP_PATH/_build/prod/rel/$APP_NAME/bin/$APP_NAME start
 }
 
 rsync_clean() {
-    : rm $RSYNC_CONF 2>/dev/null
-    : sudo killall -9 rsync 2>/dev/null
+    rm -f $RSYNC_CONF 2>/dev/null
+    RSYNC_PID=$(pgrep -f 'rsync --daemon' || echo 0)
+    [ $RSYNC_PID != 0 ] && sudo kill -9 $RSYNC_PID 2>/dev/null || true
 }
 
 rsync_app() {
