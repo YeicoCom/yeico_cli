@@ -69,7 +69,7 @@ build_app () {
     echo YEICO_CLI_APP_NAME=$APP_NAME > $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_VERSION=$APP_VERSION >> $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> $APP_RELDIR/release.yeico
-    ln -s releases/$APP_VERSION/env.sh $APP_RELDIR/env.sh
+    ln -sf releases/$APP_VERSION/env.sh $APP_RELDIR/env.sh
     echo export RELEASE_NODE=$APP_NAME@localhost >> $APP_RELDIR/env.sh
     echo export HOME=/data/$APP_NAME >> $APP_RELDIR/env.sh
     if [[ $APP_PHOENIX == true ]]; then
