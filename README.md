@@ -20,28 +20,24 @@ asdf local yeico_cli main
 asdf local yeico_cli <commit-or-tag-or-release>
 asdf plugin remove yeico_cli
 
-yeico install <ip-or-host> <app-path-or-pwd>
-yeico start <ip-or-host> <app-path-or-pwd>
-yeico stop <ip-or-host> <app-path-or-pwd>
-yeico shell <ip-or-host> <app-path-or-pwd>
-yeico log <ip-or-host> <app-path-or-pwd>
+bin/yeico help # show usage
+bin/yeico update # self update asdf package
 
 mix new hello_elixir
-bin/yeico build kiosk hello_elixir
+bin/yeico build hello_elixir
 bin/yeico upgrade kiosk hello_elixir
 
 mix local.hex --force
 mix archive.install hex phx_new --force
 mix phx.new hello_phoenix --no-ecto
-bin/yeico build kiosk hello_phoenix
+bin/yeico build hello_phoenix
 bin/yeico upgrade kiosk hello_phoenix
-bin/yeico cog kiosk http://localhost:4000/
-bin/yeico cog kiosk https://google.com
-bin/yeico cog kiosk https://github.com
+bin/yeico show kiosk http://localhost:4000/
+bin/yeico show kiosk https://google.com
+bin/yeico show kiosk https://github.com
 
 mix phx.new --no-dashboard --no-assets --no-ecto --no-gettext --no-html --no-live --no-mailer hello_webapi
-bin/yeico build kiosk hello_webapi
+bin/yeico build hello_webapi
 bin/yeico upgrade kiosk hello_webapi
-bin/yeico cog kiosk http://localhost:4001/api/
+bin/yeico show kiosk http://localhost:4001/api/
 ```
-

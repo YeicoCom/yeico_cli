@@ -3,34 +3,68 @@
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 SCRIPT_PATH=$(realpath $SCRIPT_PATH)
 
-ACTION=$1
-APP_HOST=$2
-APP_PATH=${3:-$(pwd)}
-COG_URL=$3
-
-case $ACTION in
-    build)
-    APP_REQUIRED=1
-    echo Action: $ACTION
-    echo App Folder: $APP_PATH
-    ;;
-    list|cog|shell)
-    APP_REQUIRED=0
-    echo Action: $ACTION
-    echo Target: $APP_HOST
-    ;;
-    *)
-    APP_REQUIRED=1
-    echo Action: $ACTION
-    echo Target: $APP_HOST
-    echo App Folder: $APP_PATH
-    ;;
-esac
 
 panic() { 
-    >&2 echo $1
+    >&2 echo Panic: $1
     exit 1
 }
+
+help() {
+    this=$(basename $0)
+    echo "Usage: $this action ...args"
+    echo "$this help"
+    echo "$this update"
+    echo "$this list host"
+    echo "$this show host url|splash"
+    echo "$this build path-to-project|current-directory"
+    echo "$this install host path-to-project|current-directory"
+    echo "$this upgrade host path-to-project|current-directory"
+    echo "$this start|stop|restart|uninstall|pid|shell host app-name|path-to-project|current-directory"
+    exit 1
+}
+
+ACTION=$1
+
+case $ACTION in
+    update)
+    APP_LEVEL=0
+    echo Action: $ACTION
+    ;;
+    list|show)
+    APP_LEVEL=0
+    APP_HOST=$2
+    SHOW_URL=$3
+    [ -n "$APP_HOST" ] || panic "Missing host argument"
+    echo Action: $ACTION
+    echo Target: $APP_HOST
+    ;;
+    build)
+    APP_LEVEL=2 #full application
+    APP_PATH=${2:-$(pwd)}
+    echo Action: $ACTION
+    ;;
+    install|upgrade)
+    APP_LEVEL=2 #full application
+    APP_HOST=$2
+    APP_PATH=${3:-$(pwd)}
+    [ -n "$APP_HOST" ] || panic "Missing host argument"
+    echo Action: $ACTION
+    ;;
+    start|stop|restart|uninstall|pid|shell)
+    APP_LEVEL=1 #name of application
+    APP_HOST=$2
+    APP_NAME=$3
+    [ -n "$APP_HOST" ] || panic "Missing host argument"
+    echo Action: $ACTION
+    echo Target: $APP_HOST
+    ;;
+    help)
+    help
+    ;;
+    *)
+    help
+    ;;
+esac
 
 last_line() {
     # [error] `inotify-tools` is needed to run `file_system` for your system, check https://github.com/rvoicilas/inotify-tools/wiki 
@@ -42,11 +76,22 @@ last_line() {
     sed -n '$p' -
 }
 
-if [ $APP_REQUIRED == 1 ]; then
+if [ $APP_LEVEL == 1 ]; then
+    if [ -f "${APP_NAME:-.}/mix.exs" ]; then
+        APP_PATH=${APP_NAME:-.}
+        APP_LEVEL=2
+    else
+        [ -n "$APP_NAME" ] || panic "Missing app name"
+        echo App Name: $APP_NAME
+    fi
+fi
+
+if [ $APP_LEVEL == 2 ]; then
     cd $APP_PATH
     APP_PATH=$(pwd)
     echo App Path: $APP_PATH
     [ -f mix.exs ] || panic "Missing mix.exs"
+    # projects with no deps have no deps folder and will run deps.get every time
     [ -d deps ] || (MIX_ENV=prod mix deps.get  || panic "Deps get failure")
     (MIX_ENV=prod mix compile  || panic "Compilation failure")
     APP_NAME=$(mix run --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
@@ -106,7 +151,7 @@ command_app() {
     echo apps.sh $1 $APP_NAME | ssh -T root@$APP_HOST
 }
 
-command_cog() {
+command_show() {
     echo cog.sh $1 | ssh -T root@$APP_HOST
 }
 
@@ -138,18 +183,21 @@ case $ACTION in
     pid)
     command_app pid
     ;;
-    cog)
-    command_cog $COG_URL
+    show)
+    command_show $SHOW_URL
     ;;
     shell)
-    cd $APP_PATH
-    APP_NAME=$(basename $(pwd))
-    echo App Name: $APP_NAME
     # test tty with: ssh -t root@kiosk htop
+    # ps -ww | grep beam.smp | grep start_iex
+    # pgrep -f start_iex || echo $?
+    # kill $(pgrep -f start_iex)
     ssh -t root@$APP_HOST LC_ALL=en_US.UTF-8 apps.sh shell $APP_NAME
     ;;
+    update)
+    asdf uninstall yeico_cli main
+    asdf install yeico_cli main
+    ;;
     *)
-    echo "Usage: $0 {build|start|stop|restart|install|uninstall|upgrade|list|pid|cog|shell}"
-    exit 1
+    help
     ;;
 esac
