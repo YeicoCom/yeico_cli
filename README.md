@@ -32,12 +32,12 @@ mix archive.install hex phx_new --force
 mix phx.new hello_phoenix --no-ecto
 bin/yeico build hello_phoenix
 bin/yeico upgrade kiosk hello_phoenix
-bin/yeico show kiosk http://localhost:4000/
+bin/yeico show kiosk http://localhost:3999/
 bin/yeico show kiosk https://google.com
 bin/yeico show kiosk https://github.com
 
 mix phx.new --no-dashboard --no-assets --no-ecto --no-gettext --no-html --no-live --no-mailer hello_webapi
 bin/yeico build hello_webapi
 bin/yeico upgrade kiosk hello_webapi
-bin/yeico show kiosk http://localhost:4001/api/
+bin/yeico show kiosk http://localhost:3998/api/
 ```

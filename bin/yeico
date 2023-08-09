@@ -77,11 +77,12 @@ last_line() {
 }
 
 if [ $APP_LEVEL == 1 ]; then
-    if [ -f "${APP_NAME:-.}/mix.exs" ]; then
-        APP_PATH=${APP_NAME:-.}
+    APP_PATH=${APP_NAME:-.}
+    if [ -f "${APP_PATH}/mix.exs" ]; then
         APP_LEVEL=2
     else
         [ -n "$APP_NAME" ] || panic "Missing app name"
+        [[ "$APP_NAME" =~ ^[0-9a-zA-Z_\-]+$ ]] || panic "Invalid app name"
         echo App Name: $APP_NAME
     fi
 fi
