@@ -93,6 +93,8 @@ if [ $APP_LEVEL == 2 ]; then
     echo App Path: $APP_PATH
     [ -f mix.exs ] || panic "Missing mix.exs"
     # projects with no deps have no deps folder and will run deps.get every time
+    # mix deps.get is verbose and will be run only once
+    # manually running the dev mix deps.get after adding deps is a reasonable compromise
     [ -d deps ] || (MIX_ENV=prod mix deps.get  || panic "Deps get failure")
     (MIX_ENV=prod mix compile  || panic "Compilation failure")
     APP_NAME=$(mix run --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
@@ -192,7 +194,7 @@ case $ACTION in
     # ps -ww | grep beam.smp | grep start_iex
     # pgrep -f start_iex || echo $?
     # kill $(pgrep -f start_iex)
-    ssh -t root@$APP_HOST LC_ALL=en_US.UTF-8 apps.sh shell $APP_NAME
+    ssh -t root@$APP_HOST apps.sh shell $APP_NAME
     ;;
     update)
     asdf uninstall yeico_cli main
