@@ -1,0 +1,11 @@
+[Unit]
+Description=apps service
+After=network-online.target
+
+[Service]
+ExecStart=/etc/init.d/apps start
+ExecStop=/etc/init.d/apps stop
+Type=forking
+
+[Install]
+WantedBy=multi-user.target

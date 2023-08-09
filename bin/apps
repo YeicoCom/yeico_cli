@@ -1,0 +1,52 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+### END INIT INFO
+#
+# first app to start will launch epmd
+# ERL_EPMD_ADDRESS added to env.sh
+#
+
+APPS=/usr/sbin/apps.sh
+LOG=/var/log/apps.log
+
+export LC_ALL=en_US.UTF-8
+
+cd /apps
+
+panic() { 
+    >&2 echo $1
+    exit 1
+}
+
+if [ -d lost+found ]; then
+    $APPS uninstall lost+found | tee -a $LOG
+fi
+
+start_apps () {
+    for app in $(ls)
+    do
+        # ignore erl_crash.dump
+        [ -d $app ] || continue
+        $APPS start $app | tee -a $LOG
+    done
+}
+
+stop_apps () {
+    for app in $(ls)
+    do
+        # ignore erl_crash.dump
+        [ -d $app ] || continue
+        $APPS stop $app | tee -a $LOG
+    done
+}
+
+case "$1" in
+    start)
+    start_apps
+    ;;
+    stop)
+    stop_apps
+    ;;
+esac

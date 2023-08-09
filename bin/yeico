@@ -3,7 +3,6 @@
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 SCRIPT_PATH=$(realpath $SCRIPT_PATH)
 
-
 panic() { 
     >&2 echo Panic: $1
     exit 1
@@ -15,6 +14,7 @@ help() {
     echo "$this help"
     echo "$this update"
     echo "$this list host"
+    echo "$this setup host"
     echo "$this show host url|splash"
     echo "$this build path-to-project|current-directory"
     echo "$this install host path-to-project|current-directory"
@@ -30,7 +30,7 @@ case $ACTION in
     APP_LEVEL=0
     echo Action: $ACTION
     ;;
-    list|show)
+    list|setup|show)
     APP_LEVEL=0
     APP_HOST=$2
     SHOW_URL=$3
@@ -57,9 +57,6 @@ case $ACTION in
     [ -n "$APP_HOST" ] || panic "Missing host argument"
     echo Action: $ACTION
     echo Target: $APP_HOST
-    ;;
-    help)
-    help
     ;;
     *)
     help
@@ -119,6 +116,8 @@ build_app () {
     echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> $APP_RELDIR/release.yeico
     ln -sf releases/$APP_VERSION/env.sh $APP_RELDIR/env.sh
     [ -f $APP_PATH/.iex.exs ] && cp -f $APP_PATH/.iex.exs $APP_RELDIR/
+    # epmd automatically launched by the app start scripts
+    echo export ERL_EPMD_ADDRESS=127.0.0.1 >> $APP_RELDIR/env.sh
     echo export RELEASE_NODE=$APP_NAME@localhost >> $APP_RELDIR/env.sh
     echo export HOME=/data/$APP_NAME >> $APP_RELDIR/env.sh
     if [[ $APP_PHOENIX == true ]]; then
@@ -159,8 +158,30 @@ command_show() {
 }
 
 case $ACTION in
+    update)
+    asdf uninstall yeico_cli main
+    asdf install yeico_cli main
+    ;;
+    list)
+    command_app list
+    ;;
+    setup)
+    scp $SCRIPT_PATH/apps.sh root@$APP_HOST:/usr/sbin/
+    scp $SCRIPT_PATH/apps root@$APP_HOST:/etc/init.d/
+    scp $SCRIPT_PATH/apps.service root@$APP_HOST:/etc/systemd/system/
+    command_app setup
+    ;;
+    show)
+    command_show $SHOW_URL
+    ;;
     build)
     build_app
+    ;;
+    install)
+    rsync_app install
+    ;;
+    upgrade)
+    rsync_app upgrade
     ;;
     start)
     command_app start
@@ -171,23 +192,11 @@ case $ACTION in
     restart)
     command_app restart
     ;;
-    install)
-    rsync_app install
-    ;;
     uninstall)
     command_app uninstall
     ;;
-    upgrade)
-    rsync_app upgrade
-    ;;
-    list)
-    command_app list
-    ;;
     pid)
     command_app pid
-    ;;
-    show)
-    command_show $SHOW_URL
     ;;
     shell)
     # test tty with: ssh -t root@kiosk htop
@@ -196,11 +205,7 @@ case $ACTION in
     # kill $(pgrep -f start_iex)
     ssh -t root@$APP_HOST apps.sh shell $APP_NAME
     ;;
-    update)
-    asdf uninstall yeico_cli main
-    asdf install yeico_cli main
-    ;;
     *)
-    help
+    panic "Invalid action"
     ;;
 esac
