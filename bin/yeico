@@ -14,7 +14,7 @@ case $ACTION in
     echo Action: $ACTION
     echo App Folder: $APP_PATH
     ;;
-    list|cog)
+    list|cog|shell)
     APP_REQUIRED=0
     echo Action: $ACTION
     echo Target: $APP_HOST
@@ -141,8 +141,15 @@ case $ACTION in
     cog)
     command_cog $COG_URL
     ;;
+    shell)
+    cd $APP_PATH
+    APP_NAME=$(basename $(pwd))
+    echo App Name: $APP_NAME
+    # test tty with: ssh -t root@kiosk htop
+    ssh -t root@$APP_HOST LC_ALL=en_US.UTF-8 apps.sh shell $APP_NAME
+    ;;
     *)
-    echo "Usage: $0 {build|start|stop|restart|install|uninstall|upgrade|list|pid|cog}"
+    echo "Usage: $0 {build|start|stop|restart|install|uninstall|upgrade|list|pid|cog|shell}"
     exit 1
     ;;
 esac
