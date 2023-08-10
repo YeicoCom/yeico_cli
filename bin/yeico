@@ -94,11 +94,11 @@ if [ $APP_LEVEL == 2 ]; then
     # manually running the dev mix deps.get after adding deps is a reasonable compromise
     [ -d deps ] || (MIX_ENV=prod mix deps.get  || panic "Deps get failure")
     (MIX_ENV=prod mix compile  || panic "Compilation failure")
-    APP_NAME=$(mix run --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
+    APP_NAME=$(mix run --no-start --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
     echo App Name: $APP_NAME
-    APP_VERSION=$(mix run --eval "Mix.Project.config()[:version] |> IO.puts()" | last_line)
+    APP_VERSION=$(mix run --no-start --eval "Mix.Project.config()[:version] |> IO.puts()" | last_line)
     echo App Version: $APP_VERSION
-    APP_PHOENIX=$(mix run --eval "Mix.Project.config()[:deps] |> Keyword.get(:phoenix) |> IO.inspect()" | last_line)
+    APP_PHOENIX=$(mix run --no-start --eval "Mix.Project.config()[:deps] |> Keyword.get(:phoenix) |> IO.inspect()" | last_line)
     APP_PHOENIX=$(test "$APP_PHOENIX" == "nil" && echo false || echo true)
     echo App Phoenix: $APP_PHOENIX
     RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
