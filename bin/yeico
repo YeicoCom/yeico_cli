@@ -23,6 +23,8 @@ help() {
     exit 1
 }
 
+export MIX_ENV=prod
+
 ACTION=$1
 
 case $ACTION in
@@ -92,8 +94,9 @@ if [ $APP_LEVEL == 2 ]; then
     # projects with no deps have no deps folder and will run deps.get every time
     # mix deps.get is verbose and will be run only once
     # manually running the dev mix deps.get after adding deps is a reasonable compromise
-    [ -d deps ] || (MIX_ENV=prod mix deps.get  || panic "Deps get failure")
-    (MIX_ENV=prod mix compile  || panic "Compilation failure")
+    [ -d deps ] || (mix deps.get  || panic "Deps get failure")
+    (mix compile  || panic "Compilation failure")
+    # --no-start required for cross compilation
     APP_NAME=$(mix run --no-start --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
     echo App Name: $APP_NAME
     APP_VERSION=$(mix run --no-start --eval "Mix.Project.config()[:version] |> IO.puts()" | last_line)
@@ -107,10 +110,10 @@ fi
 
 build_app () {
     if [[ $APP_PHOENIX == true ]]; then
-        (MIX_ENV=prod mix phx.gen.release || panic "Phx release failure")
-        [ -d assets ] && (MIX_ENV=prod mix assets.deploy || panic "Assets deploy failure")
+        (mix phx.gen.release || panic "Phx release failure")
+        [ -d assets ] && (mix assets.deploy || panic "Assets deploy failure")
     fi    
-    MIX_ENV=prod mix release --overwrite --quiet || panic "Release failure"
+    mix release --overwrite --quiet || panic "Release failure"
     echo YEICO_CLI_APP_NAME=$APP_NAME > $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_VERSION=$APP_VERSION >> $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> $APP_RELDIR/release.yeico
