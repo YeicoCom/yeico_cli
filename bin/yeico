@@ -96,6 +96,7 @@ if [ $APP_LEVEL == 2 ]; then
     # manually running the dev mix deps.get after adding deps is a reasonable compromise
     [ -d deps ] || (mix deps.get  || panic "Deps get failure")
     (mix compile  || panic "Compilation failure")
+    export SECRET_KEY_BASE=XVd7MRJNyiiG4OyxQPw5SbrxbQDPZs7cC6blTKbe6Y7Kw8HE6NPOF/m+ZjKAeuNj
     # --no-start required for cross compilation
     APP_NAME=$(mix run --no-start --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
     echo App Name: $APP_NAME
