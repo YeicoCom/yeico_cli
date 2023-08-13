@@ -95,20 +95,10 @@ rsync_app() {
 }
 
 install_app() {
-    if [ ! -e $APP_PATH ]; then
+    if ! (mount | grep $APP_TMP &>/dev/null); then
         echo App installing: $APP_NAME
         rsync_app
         echo App installed: $APP_NAME
-    else
-        echo App already installed: $APP_NAME
-    fi
-}
-
-upgrade_app() {
-    if ! (mount | grep $APP_TMP &>/dev/null); then
-        echo App upgrading: $APP_NAME
-        rsync_app
-        echo App upgraded: $APP_NAME
     else
         echo App is running: $APP_NAME
     fi
@@ -142,17 +132,13 @@ case "$ACTION" in
     start_app
     ;;
     install)
+    stop_app
     install_app
     start_app
     ;;
     uninstall)
     stop_app
     uninstall_app
-    ;;
-    upgrade)
-    stop_app
-    upgrade_app
-    start_app
     ;;
     list)
     list_apps
@@ -164,7 +150,7 @@ case "$ACTION" in
     $APP_RUN remote
     ;;
     *)
-    echo "Usage: $0 {setup|run|start|stop|restart|install|uninstall|upgrade|list|pid|shell}"
+    echo "Usage: $0 {setup|run|start|stop|restart|install|uninstall|list|pid|shell}"
     exit 1
 esac
 
