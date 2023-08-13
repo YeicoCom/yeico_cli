@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-export LC_ALL=en_US.UTF-8
-
 ACTION=$1
 APP_NAME=$2
 APP_SYNCD=${3:-127.0.0.1}
