@@ -123,6 +123,7 @@ build_app () {
     echo export ERL_EPMD_ADDRESS=127.0.0.1 >> $APP_RELDIR/env.sh
     echo export RELEASE_NODE=$APP_NAME@localhost >> $APP_RELDIR/env.sh
     echo export HOME=/data/$APP_NAME >> $APP_RELDIR/env.sh
+    echo export LC_ALL=en_US.UTF-8 >> $APP_RELDIR/env.sh
     if [[ $APP_PHOENIX == true ]]; then
         touch $APP_RELDIR/phoenix
         APP_SECRET=$(mix phx.gen.secret | last_line)
