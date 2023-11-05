@@ -89,7 +89,7 @@ rsync_app() {
     mkdir -p $APP_TMP || panic "Tmp mkdir failure"
     mkdir -p $APP_HOME || panic "Home mkdir failure"
     rm -f $APP_HOME/.iex.exs || panic ".iex.exs rm failure"
-    [ -f $APP_PATH/.iex.exs ] && (ln -sf $APP_PATH/.iex.exs $APP_HOME/ || panic ".iex.exs link failure")
+    [ -f $APP_PATH/.iex.exs ] && (ln -sf $APP_PATH/.iex.exs $APP_HOME/ || panic ".iex.exs link failure") || true
 }
 
 install_app() {
