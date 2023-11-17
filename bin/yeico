@@ -44,7 +44,7 @@ case $ACTION in
     APP_PATH=${2:-$(pwd)}
     echo Action: $ACTION
     ;;
-    install)
+    install|deploy)
     APP_LEVEL=2 #full application
     APP_HOST=$2
     APP_PATH=${3:-$(pwd)}
@@ -183,6 +183,10 @@ case $ACTION in
     build_app
     ;;
     install)
+    rsync_app install
+    ;;
+    deploy)
+    build_app
     rsync_app install
     ;;
     start)
