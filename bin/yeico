@@ -130,10 +130,9 @@ build_app () {
         APP_SECRET=$(mix phx.gen.secret | last_line)
         echo export PHX_SERVER=true >> $APP_RELDIR/env.sh
         echo export SECRET_KEY_BASE=$APP_SECRET >> $APP_RELDIR/env.sh
-        echo $APP_PATH/$APP_RELDIR/bin/$APP_NAME start
-    else
-        echo $APP_PATH/$APP_RELDIR/bin/$APP_NAME start
     fi
+    echo "[ -f /data/$APP_NAME.env ] && . /data/$APP_NAME.env || true" >> $APP_RELDIR/env.sh
+    echo $APP_PATH/$APP_RELDIR/bin/$APP_NAME start
 }
 
 rsync_clean() {
