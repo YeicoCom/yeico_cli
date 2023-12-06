@@ -14,7 +14,6 @@ panic() {
 }
 
 setup_host() {
-    chmod -x /etc/update-motd.d/*
     mkdir -p /apps
     mkdir -p /data
     systemctl enable apps || echo Failure to enable apps
