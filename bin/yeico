@@ -111,8 +111,9 @@ fi
 build_app () {
     if [[ $APP_PHOENIX == true ]]; then
         (mix phx.gen.release || panic "Phx release failure")
+        [ -d assets ] && (mix phx.digest.clean --all || panic "Assets digest clean failure")
         [ -d assets ] && (mix assets.deploy || panic "Assets deploy failure")
-    fi    
+    fi
     mix release --overwrite --quiet || panic "Release failure"
     echo YEICO_CLI_APP_NAME=$APP_NAME > $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_VERSION=$APP_VERSION >> $APP_RELDIR/release.yeico
