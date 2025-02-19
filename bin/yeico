@@ -118,6 +118,15 @@ build_app () {
     echo YEICO_CLI_APP_NAME=$APP_NAME > $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_VERSION=$APP_VERSION >> $APP_RELDIR/release.yeico
     echo YEICO_CLI_APP_PHOENIX=$APP_PHOENIX >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_ASDF=$(asdf version) >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_BUILD=$(date +'%Y%m%dT%H%M%S.%3N') >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_HOSTNAME=$(hostname) >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_GIT_ORIGIN=$(git config --get remote.origin.url) >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_GIT_COMMIT=$(git rev-parse HEAD) >> $APP_RELDIR/release.yeico
+    echo YEICO_CLI_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $APP_RELDIR/release.yeico
+    echo \#$(asdf current erlang) >> $APP_RELDIR/release.yeico
+    echo \#$(asdf current elixir) >> $APP_RELDIR/release.yeico
+
     ln -sf releases/$APP_VERSION/env.sh $APP_RELDIR/env.sh
     [ -f $APP_PATH/.iex.exs ] && cp -f $APP_PATH/.iex.exs $APP_RELDIR/
     # epmd automatically launched by the app start scripts
