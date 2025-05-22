@@ -59,6 +59,7 @@ stop_app () {
         echo App stopping: $APP_NAME
         # panicking here makes impossible to delete an app that won't start
         ($APP_RUN stop &>/dev/null) || echo "App stop failed: $APP_NAME"
+        pkill -f $APP_PATH
         COUNTER=30
         while true; do
             umount $APP_TMP &>/dev/null || true
