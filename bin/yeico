@@ -71,7 +71,10 @@ last_line() {
     # [warning] Could not start Phoenix live-reload because we cannot listen to the file system.
     # You don't need to worry! This is an optional feature used during development to
     # refresh your browser when you save files and it does not affect production.
-    sed -n '$p' -
+    case $(uname -s) in
+        Darwin*)    sed -n '$p';;
+        *)          sed -n '$p' -;;
+    esac
 }
 
 if [ $APP_LEVEL == 1 ]; then
