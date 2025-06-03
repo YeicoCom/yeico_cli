@@ -132,6 +132,9 @@ build_app () {
     echo \#$(asdf current erlang) >> $APP_RELDIR/release.yeico
     echo \#$(asdf current elixir) >> $APP_RELDIR/release.yeico
 
+    #for terminal applets static plug
+    ln -sf /data/$APP_NAME $APP_RELDIR/lib/$APP_NAME-$APP_VERSION/priv/data
+
     ln -sf releases/$APP_VERSION/env.sh $APP_RELDIR/env.sh
     [ -f $APP_PATH/.iex.exs ] && cp -f $APP_PATH/.iex.exs $APP_RELDIR/
     # epmd automatically launched by the app start scripts
