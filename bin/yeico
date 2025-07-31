@@ -226,7 +226,7 @@ case $ACTION in
     # ps -ww | grep beam.smp | grep start_iex
     # pgrep -f start_iex || echo $?
     # kill $(pgrep -f start_iex)
-    ssh -t root@$APP_HOST apps.sh shell $APP_NAME
+    ssh -tt root@$APP_HOST apps.sh shell $APP_NAME
     ;;
     *)
     panic "Invalid action"
