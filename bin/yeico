@@ -142,6 +142,7 @@ build_app () {
     echo export RELEASE_NODE=$APP_NAME@localhost >> $APP_RELDIR/env.sh
     echo '[ -f /run/yeico.cookie ] && export RELEASE_COOKIE=$(cat /run/yeico.cookie)' >> $APP_RELDIR/env.sh
     echo export HOME=/data/$APP_NAME >> $APP_RELDIR/env.sh
+    echo export USER=root >> $APP_RELDIR/env.sh #missing on yeico- devices
     echo export LC_ALL=en_US.UTF-8 >> $APP_RELDIR/env.sh
     if [[ $APP_PHOENIX == true ]]; then
         touch $APP_RELDIR/phoenix
