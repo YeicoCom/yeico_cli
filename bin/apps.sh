@@ -147,6 +147,9 @@ case "$ACTION" in
     shell)
     $APP_RUN remote
     ;;
+    names)
+    epmd -names
+    ;;
     *)
     echo "Usage: $0 {setup|run|start|stop|restart|install|uninstall|list|pid|shell}"
     exit 1
