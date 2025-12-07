@@ -100,11 +100,12 @@ if [ $APP_LEVEL == 2 ]; then
     (mix compile  || panic "Compilation failure")
     export SECRET_KEY_BASE=XVd7MRJNyiiG4OyxQPw5SbrxbQDPZs7cC6blTKbe6Y7Kw8HE6NPOF/m+ZjKAeuNj
     # --no-start required for cross compilation
-    APP_NAME=$(mix run --no-start --eval "Mix.Project.config()[:app] |> to_string() |> IO.puts()" | last_line)
+    # mix is not correctly evaluating expressions with spaces
+    APP_NAME=$(mix run --no-start --eval "Mix.Project.config()[:app]|>to_string()|>IO.puts()" | last_line)
     echo App Name: $APP_NAME
-    APP_VERSION=$(mix run --no-start --eval "Mix.Project.config()[:version] |> IO.puts()" | last_line)
+    APP_VERSION=$(mix run --no-start --eval "Mix.Project.config()[:version]|>IO.puts()" | last_line)
     echo App Version: $APP_VERSION
-    APP_PHOENIX=$(mix run --no-start --eval "Mix.Project.config()[:deps] |> Keyword.get(:phoenix) |> IO.inspect()" | last_line)
+    APP_PHOENIX=$(mix run --no-start --eval "Mix.Project.config()[:deps]|>Keyword.get(:phoenix)|>IO.inspect()" | last_line)
     APP_PHOENIX=$(test "$APP_PHOENIX" == "nil" && echo false || echo true)
     echo App Phoenix: $APP_PHOENIX
     RSYNC_CONF=/tmp/.rsyncd.conf.$APP_NAME
